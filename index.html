@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title> LoveBooth Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background: linear-gradient(135deg, #FFE4EC 0%, #E8D5F5 50%, #FFF5E6 100%); min-height: 100vh; overflow-x: hidden; }
+        .font-script { font-family: 'Dancing Script', cursive; }
+        .screen { display: none; animation: fadeIn 0.4s ease-out; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Floating Hearts */
+        .floating-heart { position: fixed; pointer-events: none; animation: floatUp linear infinite; opacity: 0.4; z-index: 0; }
+        @keyframes floatUp { 0% { transform: translateY(100vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.4; } 90% { opacity: 0.4; } 100% { transform: translateY(-100px) rotate(360deg); opacity: 0; } }
+        
+        /* Shutter Button */
+        .shutter-btn { width: 75px; height: 75px; border-radius: 50%; background: white; border: 4px solid #FF6B9D; position: relative; cursor: pointer; transition: transform 0.1s; }
+        .shutter-btn::after { content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px; border-radius: 50%; background: #FF6B9D; transition: all 0.1s; }
+        .shutter-btn:active { transform: scale(0.95); }
+        .shutter-btn:active::after { top: 10px; left: 10px; right: 10px; bottom: 10px; background: #C44569; }
+
+        /* Countdown */
+        .countdown-text { font-size: 8rem; font-weight: 700; color: white; text-shadow: 0 4px 20px rgba(255, 107, 157, 0.6); animation: bounceIn 0.5s ease-out; }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+
+        /* Flash Effect */
+        .flash-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; pointer-events: none; opacity: 0; }
+        .flash-overlay.active { animation: flashAnim 0.6s ease-out forwards; }
+        @keyframes flashAnim { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+        /* Frame Cards */
+        .frame-card { transition: all 0.3s; }
+        .frame-card.selected { ring: 4px; ring-color: #FF6B9D; transform: scale(1.05); border-color: #FF6B9D; }
+
+        /* Video Mirror */
+        .video-mirror { transform: scaleX(-1); }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- Floating Hearts Background -->
+    <div id="hearts-container"></div>
+    <div id="flash" class="flash-overlay"></div>
+
+    <!-- ================= HOME SCREEN ================= -->
+    <div id="screen-home" class="screen active flex-col items-center justify-center min-h-screen p-6 relative z-10">
+        <div class="text-center max-w-md w-full">
+            <div class="mb-8 animate-bounce">
+                <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 shadow-2xl shadow-pink-200 mb-4 text-5xl"></div>
+                <h1 class="text-5xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent mb-2">LoveBooth</h1>
+                <p class="text-gray-500 text-lg">Virtual Couple Photobooth 💕</p>
+            </div>
+            <p class="text-gray-600 mb-10 text-center px-4">Ambil foto romantis bersama pasanganmu, meski berada di tempat berbeda ✨</p>
+            
+            <div class="space-y-4">
+                <button onclick="showScreen('create')" class="w-full py-4 rounded-2xl font-bold text-white text-lg bg-gradient-to-r from-pink-400 to-rose-400 shadow-lg shadow-pink-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <span>💕</span> Create Booth
+                </button>
+                <button onclick="showScreen('join')" class="w-full py-4 rounded-2xl font-bold text-pink-500 text-lg bg-white border-2 border-pink-200 shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <span>👥</span> Join Booth
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CREATE BOOTH ================= -->
+    <div id="screen-create" class="screen flex-col min-h-screen p-6 relative z-10">
+        <button onclick="showScreen('home')" class="absolute top-6 left-6 p-2 rounded-full bg-white/50 backdrop-blur text-pink-500">←</button>
+        <div class="flex-1 flex flex-col justify-center max-w-md mx-auto w-full pt-16">
+            <div class="bg-white/70 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-white/50">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-3">💌</div>
+                    <h2 class="text-2xl font-bold text-gray-800">Buat Booth Baru</h2>
+                    <p class="text-gray-500 text-sm">Masukkan nama kalian berdua</p>
+                </div>
+                <div class="space-y-4">
+                    <input type="text" id="name1" placeholder="Nama Kamu" class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none bg-white/80">
+                    <input type="text" id="name2" placeholder="Nama Pasangan" class="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none bg-white/80">
+                    <button onclick="generateCode()" class="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-pink-400 to-rose-400 shadow-lg active:scale-95 transition-transform">Generate Code 💕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= WAITING ROOM ================= -->
+    <div id="screen-room" class="screen flex-col min-h-screen relative z-10">
+        <div class="bg-white/70 backdrop-blur px-4 py-3 flex items-center justify-between sticky top-0 z-50 border-b border-pink-100">
+            <button onclick="showScreen('home')" class="p-2 rounded-full text-pink-500">←</button>
+            <div class="text-center">
+                <p class="text-xs text-gray-500">Booth Code</p>
+                <p class="text-sm font-bold text-pink-600 tracking-wider" id="display-code">LOVE-XXXX</p>
+            </div>
+            <div class="w-8"></div>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center p-6">
+            <div class="bg-white/70 backdrop-blur-lg rounded-3xl p-8 shadow-xl text-center max-w-md w-full border border-white/50">
+                <div class="text-6xl mb-4 animate-pulse">💕</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Menunggu Pasangan...</h2>
+                <p class="text-gray-500 mb-6 text-sm">Bagikan kode ini ke pasanganmu!</p>
+                
+                <div class="bg-pink-50 rounded-2xl p-4 mb-6 border border-pink-100">
+                    <p class="text-xs text-gray-500 mb-1">Kode Booth</p>
+                    <p class="text-3xl font-bold text-pink-600 tracking-widest" id="room-code">LOVE-1234</p>
+                </div>
+
+                <div class="space-y-3 mb-6 text-left">
+                    <div class="flex items-center gap-3 bg-green-50 rounded-xl p-3 border border-green-100">
+                        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-sm text-gray-700 font-medium" id="display-name1">Kamu</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-sm text-gray-700 font-medium" id="display-name2">Pasangan (Connected)</span>
+                    </div>
+                </div>
+
+                <button onclick="startCameraSession()" class="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-pink-400 to-rose-400 shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+                     Start Photo Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CAMERA & FRAMES ================= -->
+    <div id="screen-camera" class="screen flex-col min-h-screen relative z-10 bg-black">
+        <!-- Camera Area -->
+        <div class="flex-1 relative overflow-hidden bg-gray-900">
+            <video id="localVideo" autoplay playsinline muted class="w-full h-full object-cover video-mirror"></video>
+            
+            <!-- Frame Overlay Preview -->
+            <div id="frame-overlay" class="absolute inset-0 pointer-events-none flex items-center justify-center border-[12px] border-white/30 rounded-3xl m-4 transition-all duration-300"></div>
+
+            <!-- Top Info -->
+            <div class="absolute top-4 left-4 right-4 flex justify-between items-center z-20">
+                <div class="bg-black/40 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-medium">📸 1 / 4</div>
+                <button onclick="showScreen('frames')" class="bg-black/40 backdrop-blur text-white px-4 py-2 rounded-full text-xs font-medium flex items-center gap-1">🖼️ Ganti Frame</button>
+            </div>
+
+            <!-- Countdown Overlay -->
+            <div id="countdown-overlay" class="absolute inset-0 bg-black/40 flex items-center justify-center z-30 hidden">
+                <div id="countdown-text" class="countdown-text">3</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-gradient-to-t from-black/80 to-transparent px-6 pb-8 pt-12 flex flex-col items-center">
+            <p class="text-white/80 text-sm mb-4 font-medium" id="pose-text">💡 Pose: Make a finger heart 🫶</p>
+            
+            <div class="flex items-center gap-8">
+                <button onclick="changePose()" class="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl">💡</button>
+                
+                <button onclick="startCountdown()" id="shutter-btn" class="shutter-btn"></button>
+                
+                <button onclick="showScreen('result')" class="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl">🖼️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= FRAME SELECTOR ================= -->
+    <div id="screen-frames" class="screen flex-col min-h-screen p-6 relative z-10 bg-gradient-to-b from-pink-50 to-white">
+        <div class="flex items-center mb-6">
+            <button onclick="showScreen('camera')" class="p-2 rounded-full bg-white shadow text-pink-500">←</button>
+            <h2 class="text-2xl font-bold text-gray-800 ml-4">Pilih Frame</h2>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto pb-20">
+            <div class="grid grid-cols-2 gap-4" id="frame-grid">
+                <!-- Frames injected by JS -->
+            </div>
+        </div>
+        
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur border-t border-pink-100">
+            <button onclick="showScreen('camera')" class="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-pink-400 to-rose-400 shadow-lg active:scale-95">Gunakan Frame Ini 💕</button>
+        </div>
+    </div>
+
+    <!-- ================= RESULT SCREEN ================= -->
+    <div id="screen-result" class="screen flex-col min-h-screen p-6 relative z-10 bg-gradient-to-b from-pink-50 to-white">
+        <div class="flex items-center mb-6">
+            <button onclick="showScreen('camera')" class="p-2 rounded-full bg-white shadow text-pink-500">←</button>
+            <h2 class="text-2xl font-bold text-gray-800 ml-4 flex-1 text-center">Your Moment ❤️</h2>
+            <div class="w-10"></div>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center">
+            <div class="bg-white p-4 rounded-3xl shadow-2xl mb-8 max-w-sm w-full">
+                <canvas id="resultCanvas" class="w-full rounded-xl bg-gray-100"></canvas>
+            </div>
+
+            <div class="w-full max-w-sm space-y-3">
+                <button onclick="downloadPhoto()" class="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg active:scale-95 flex items-center justify-center gap-2">💾 Save to Gallery</button>
+                <button onclick="sharePhoto()" class="w-full py-4 rounded-2xl font-bold text-pink-500 bg-white border-2 border-pink-200 shadow active:scale-95 flex items-center justify-center gap-2">📤 Share Photo</button>
+                <button onclick="showScreen('camera')" class="w-full py-3 rounded-2xl font-medium text-gray-500 bg-gray-100 active:scale-95 flex items-center justify-center gap-2"> Retake / New Session</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State ---
+        let currentFrame = 'heart';
+        let stream = null;
+        let poseIndex = 0;
+        const poses = [
+            { text: "Make a finger heart ", emoji: "🫶" },
+            { text: "Smile together! 😊", emoji: "😊" },
+            { text: "Blow a kiss 😘", emoji: "😘" },
+            { text: "Peace sign ️", emoji: "✌️" },
+            { text: "Look at each other ", emoji: "👀" }
+        ];
+        const frames = [
+            { id: 'heart', name: 'Heart', style: 'border-radius: 50% 50% 0 0 / 60% 60% 40% 40%; border-color: #FF6B9D;' },
+            { id: 'polaroid', name: 'Polaroid', style: 'border: 15px solid white; border-bottom: 50px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.1);' },
+            { id: 'rounded', name: 'Soft Round', style: 'border-radius: 30px; border-color: #E8D5F5;' },
+            { id: 'circle', name: 'Circle', style: 'border-radius: 50%; border-color: #FFB7C5;' },
+            { id: 'vintage', name: 'Vintage', style: 'border: 8px solid #D4A574; border-radius: 10px;' },
+            { id: 'neon', name: 'Neon Love', style: 'border: 4px solid #FF007F; box-shadow: 0 0 15px #FF007F, inset 0 0 15px #FF007F; border-radius: 20px;' }
+        ];
+
+        // --- Init ---
+        window.onload = () => {
+            createFloatingHearts();
+            renderFrames();
+        };
+
+        function createFloatingHearts() {
+            const container = document.getElementById('hearts-container');
+            const emojis = ['💕', '💗', '💖', '✨', '🌸'];
+            for(let i=0; i<15; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart text-2xl';
+                heart.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDuration = (5 + Math.random() * 10) + 's';
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(heart);
+            }
+        }
+
+        // --- Navigation ---
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+        }
+
+        // --- Booth Logic ---
+        function generateCode() {
+            const n1 = document.getElementById('name1').value || 'You';
+            const n2 = document.getElementById('name2').value || 'Partner';
+            const code = 'LOVE-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+            
+            document.getElementById('display-code').innerText = code;
+            document.getElementById('room-code').innerText = code;
+            document.getElementById('display-name1').innerText = n1;
+            document.getElementById('display-name2').innerText = n2 + ' (Connected)';
+            
+            showScreen('room');
+        }
+
+        // --- Camera Logic ---
+        async function startCameraSession() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                document.getElementById('localVideo').srcObject = stream;
+                showScreen('camera');
+            } catch (err) {
+                alert('Tidak bisa akses kamera. Pastikan izin diberikan! (Di preview ini, kamera wajib untuk fitur capture)');
+                // Fallback untuk demo jika kamera ditolak
+                showScreen('camera');
+            }
+        }
+
+        // --- Frame Logic ---
+        function renderFrames() {
+            const grid = document.getElementById('frame-grid');
+            grid.innerHTML = frames.map(f => `
+                <button onclick="selectFrame('${f.id}')" class="frame-card p-4 bg-white rounded-2xl shadow border-2 ${currentFrame === f.id ? 'border-pink-400 scale-105' : 'border-transparent'} flex flex-col items-center">
+                    <div class="w-20 h-20 mb-2 bg-pink-100 flex items-center justify-center text-3xl" style="${f.style}">📸</div>
+                    <span class="text-sm font-bold text-gray-700">${f.name}</span>
+                </button>
+            `).join('');
+        }
+
+        function selectFrame(id) {
+            currentFrame = id;
+            renderFrames();
+            updateFrameOverlay();
+        }
+
+        function updateFrameOverlay() {
+            const frame = frames.find(f => f.id === currentFrame);
+            const overlay = document.getElementById('frame-overlay');
+            overlay.style.cssText = frame.style + ' margin: 20px;';
+        }
+
+        // --- Pose Logic ---
+        function changePose() {
+            poseIndex = (poseIndex + 1) % poses.length;
+            document.getElementById('pose-text').innerText = '💡 Pose: ' + poses[poseIndex].text;
+        }
+
+        // --- Countdown & Capture ---
+        function startCountdown() {
+            const overlay = document.getElementById('countdown-overlay');
+            const text = document.getElementById('countdown-text');
+            overlay.classList.remove('hidden');
+            
+            let count = 3;
+            text.innerText = count;
+            
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    text.innerText = count;
+                    // Re-trigger animation
+                    text.style.animation = 'none';
+                    text.offsetHeight; 
+                    text.style.animation = 'bounceIn 0.5s ease-out';
+                } else {
+                    clearInterval(timer);
+                    text.innerText = '❤️ SNAP!';
+                    text.style.color = '#FF6B9D';
+                    setTimeout(() => {
+                        capturePhoto();
+                        overlay.classList.add('hidden');
+                        text.style.color = 'white';
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function capturePhoto() {
+            // Flash effect
+            const flash = document.getElementById('flash');
+            flash.classList.add('active');
+            setTimeout(() => flash.classList.remove('active'), 600);
+
+            // Draw to canvas
+            setTimeout(() => {
+                const canvas = document.getElementById('resultCanvas');
+                const ctx = canvas.getContext('2d');
+                const video = document.getElementById('localVideo');
+                
+                canvas.width = 600;
+                canvas.height = 800;
+
+                // Background
+                const grad = ctx.createLinearGradient(0, 0, 600, 800);
+                grad.addColorStop(0, '#FFE4EC');
+                grad.addColorStop(1, '#E8D5F5');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 600, 800);
+
+                // Draw Video Frame (Mirrored)
+                ctx.save();
+                ctx.translate(600, 0);
+                ctx.scale(-1, 1);
+                
+                // Apply simple frame clipping
+                if(currentFrame === 'circle') {
+                    ctx.beginPath(); ctx.arc(300, 350, 250, 0, Math.PI*2); ctx.clip();
+                } else if (currentFrame === 'heart') {
+                    // Simple heart approximation
+                    ctx.beginPath(); 
+                    ctx.moveTo(300, 600); 
+                    ctx.bezierCurveTo(50, 400, 50, 100, 300, 200); 
+                    ctx.bezierCurveTo(550, 100, 550, 400, 300, 600); 
+                    ctx.clip();
+                }
+
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    ctx.drawImage(video, 100, 100, 400, 500);
+                } else {
+                    ctx.fillStyle = '#FFB7C5'; ctx.fillRect(100, 100, 400, 500);
+                    ctx.fillStyle = 'white'; ctx.font = '30px Quicksand'; ctx.textAlign = 'center';
+                    ctx.fillText('Camera Preview', 300, 350);
+                }
+                ctx.restore();
+
+                // Draw Frame Border
+                ctx.strokeStyle = 'white'; ctx.lineWidth = 10;
+                if(currentFrame !== 'heart' && currentFrame !== 'circle') {
+                    ctx.strokeRect(100, 100, 400, 500);
+                }
+
+                // Draw Text
+                ctx.fillStyle = '#C44569'; ctx.font = 'bold 30px Quicksand'; ctx.textAlign = 'center';
+                ctx.fillText('You & Me ❤️', 300, 680);
+                ctx.fillStyle = '#666'; ctx.font = '20px Quicksand';
+                ctx.fillText(new Date().toLocaleDateString('id-ID'), 300, 720);
+
+                showScreen('result');
+            }, 300);
+        }
+
+        function downloadPhoto() {
+            const canvas = document.getElementById('resultCanvas');
+            const link = document.createElement('a');
+            link.download = 'lovebooth-moment.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function sharePhoto() {
+            alert('Fitur share akan membuka menu share native HP kamu! (Web Share API)');
+        }
+    </script>
+</body>
+</html>
